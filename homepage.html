@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Goal Manager</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-size: cover;
+    background-position: center;
+    transition: background 1s;
+    color: white;
+}
+
+.overlay {
+    background: rgba(0,0,0,0.6);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 500px;
+    margin: auto;
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 10px;
+}
+
+input, select {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 20px;
+    border: none;
+    outline: none;
+}
+
+button {
+    padding: 10px;
+    border: none;
+    border-radius: 20px;
+    background: #00c9a7;
+    color: white;
+    cursor: pointer;
+}
+
+.section {
+    margin-top: 20px;
+    text-align: left;
+}
+
+.goal {
+    background: rgba(255,255,255,0.2);
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    backdrop-filter: blur(5px);
+}
+
+.goal span {
+    flex: 1;
+    margin-left: 10px;
+}
+
+.done span {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+.checkbox {
+    transform: scale(1.3);
+    cursor: pointer;
+}
+
+.history {
+    background: rgba(0,0,0,0.4);
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="overlay">
+<div class="container">
+
+<h1>🎯 Smart Goal Manager</h1>
+
+<input type="text" id="goalInput" placeholder="Enter goal">
+<select id="type">
+    <option value="short">Short Term</option>
+    <option value="long">Long Term</option>
+</select>
+<button onclick="addGoal()">Add</button>
+
+<div class="section">
+    <h3>📅 Today’s Goals</h3>
+    <div id="todayGoals"></div>
+</div>
+
+<div class="section">
+    <h3>🌟 Long-Term Goals</h3>
+    <div id="longGoals"></div>
+</div>
+
+<div class="section history">
+    <h3>📜 History</h3>
+    <input type="date" id="historyDate" onchange="viewHistory()">
+    <div id="historyList"></div>
+</div>
+
+</div>
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem("goalData")) || {};
+let today = new Date().toISOString().split("T")[0];
+
+if (!data[today]) data[today] = [];
+
+function saveData() {
+    localStorage.setItem("goalData", JSON.stringify(data));
+}
+
+function addGoal() {
+    let input = document.getElementById("goalInput");
+    let type = document.getElementById("type").value;
+
+    let text = input.value.trim();
+    if (!text) return;
+
+    data[today].push({ text, done: false, type });
+
+    input.value = "";
+    saveData();
+    displayGoals();
+}
+
+function toggleGoal(index) {
+    data[today][index].done = !data[today][index].done;
+    saveData();
+    displayGoals();
+}
+
+function displayGoals() {
+    let todayDiv = document.getElementById("todayGoals");
+    let longDiv = document.getElementById("longGoals");
+
+    todayDiv.innerHTML = "";
+    longDiv.innerHTML = "";
+
+    data[today].forEach((g, i) => {
+        let div = document.createElement("div");
+        div.className = "goal";
+        if (g.done) div.classList.add("done");
+
+        div.innerHTML = `
+            <input type="checkbox" class="checkbox" ${g.done ? "checked" : ""}
+            onclick="toggleGoal(${i})">
+            <span>${g.text}</span>
+        `;
+
+        if (g.type === "short") todayDiv.appendChild(div);
+        else longDiv.appendChild(div);
+    });
+}
+
+function viewHistory() {
+    let date = document.getElementById("historyDate").value;
+    let list = document.getElementById("historyList");
+
+    list.innerHTML = "";
+
+    if (!data[date]) {
+        list.innerHTML = "No data";
+        return;
+    }
+
+    data[date].forEach(g => {
+        let div = document.createElement("div");
+        div.innerText = (g.done ? "✔ " : "❌ ") + g.text;
+        list.appendChild(div);
+    });
+}
+
+// 🌄 Motivational Background Images
+let images = [
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
+    "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d",
+    "https://images.unsplash.com/photo-1506784983877-45594efa4cbe",
+    "https://images.unsplash.com/photo-1470770841072-f978cf4d019e"
+];
+
+function changeBackground() {
+    let random = Math.floor(Math.random() * images.length);
+    document.body.style.backgroundImage = `url(${images[random]})`;
+}
+
+setInterval(changeBackground, 5000);
+changeBackground();
+
+displayGoals();
+</script>
+
+</body>
+</html>
